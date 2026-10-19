@@ -72,5 +72,9 @@ jobs:
           set -uo pipefail
           bash scripts/run_tests.sh \
             tests/scripts/desktop_update/test_desktop_update_windows_marker.py \
+            tests/scripts/desktop_update/test_desktop_update_windows_marker_bodies.py \
+            tests/scripts/desktop_update/test_desktop_update_windows_marker_bridge.py \
             tests/scripts/desktop_update/test_desktop_update_windows_delegate_custody.py \
+            tests/scripts/desktop_update/test_desktop_update_windows_marker_lock.py \
+            tests/gateway/test_session_api.py \
             -- -v --tb=short -o faulthandler_timeout=90

@@ -71,10 +71,9 @@ jobs:
         run: |
           set -uo pipefail
           bash scripts/run_tests.sh \
-            tests/scripts/desktop_update/test_desktop_update_windows_marker.py \
-            tests/scripts/desktop_update/test_desktop_update_windows_marker_bodies.py \
-            tests/scripts/desktop_update/test_desktop_update_windows_marker_bridge.py \
-            tests/scripts/desktop_update/test_desktop_update_windows_delegate_custody.py \
-            tests/scripts/desktop_update/test_desktop_update_windows_marker_lock.py \
-            tests/gateway/test_session_api.py \
-            -- -v --tb=short -o faulthandler_timeout=90
+            tests/scripts/desktop_update/test_desktop_update_windows_marker_ops.py \
+            tests/scripts/desktop_update/test_desktop_update_windows_marker_withdraw.py \
+            tests/scripts/desktop_update/test_desktop_update_windows_marker_release.py \
+            tests/scripts/desktop_update/test_desktop_update_windows_marker_checkout.py \
+            tests/scripts/desktop_update/test_desktop_update_windows_marker_child_leases.py \
+            -- -v --tb=short --durations=0 -o faulthandler_timeout=90

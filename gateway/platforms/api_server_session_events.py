@@ -1,6 +1,9 @@
-"""Ordered session SSE events and executor callback delivery."""
+"""Ordered session SSE events and executor callback delivery.
+
+Backported from upstream e0c3743aff12164a1fceb1ade7019a9b11c05541.
+"""
 import asyncio
-from contextlib import suppress
+import threading
 import time
 from typing import Any, Optional
 
@@ -15,6 +18,10 @@ class _SessionEventQueue:
         self.session_id = session_id
         self.run_id = run_id
         self.seq = 0
+        # Cross-thread puts handed to the loop and not yet applied. The loop does not order them
+        # against the worker future's completion, so the turn's terminal frames wait on flush().
+        self._inflight = 0
+        self._inflight_lock = threading.Lock()
 
     def payload(self, name: str, payload: dict[str, Any]) -> tuple[str, dict[str, Any]]:
         self.seq += 1
@@ -30,14 +37,32 @@ class _SessionEventQueue:
             running_loop = asyncio.get_running_loop()
         except RuntimeError:
             running_loop = None
-        with suppress(RuntimeError):
-            if running_loop is self.loop:
+        if running_loop is self.loop:
+            self.queue.put_nowait(event)
+            return
+        with self._inflight_lock:
+            self._inflight += 1
+
+        def _apply() -> None:
+            try:
                 self.queue.put_nowait(event)
-            else:
-                self.loop.call_soon_threadsafe(self.queue.put_nowait, event)
+            finally:
+                self._settle_one()
+        try:
+            self.loop.call_soon_threadsafe(_apply)
+        except RuntimeError:  # loop closed: the stream is gone, nothing left to deliver to
+            self._settle_one()
+
+    def _settle_one(self) -> None:
+        with self._inflight_lock:
+            self._inflight -= 1
 
     async def flush(self) -> None:
-        """Deliver executor callbacks queued before its future became awaitable."""
-        barrier = self.loop.create_future()
-        self.loop.call_soon(barrier.set_result, None)
-        await asyncio.shield(barrier)
+        """Wait until every event a worker thread enqueued has reached the queue. Call it before
+        the terminal frames: a commentary/delta/approval handed over before the worker returned
+        otherwise lands after ``done``/``None`` and the reader never sees it."""
+        while True:
+            with self._inflight_lock:
+                if not self._inflight:
+                    return
+            await asyncio.sleep(0)

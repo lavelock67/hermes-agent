@@ -1,4 +1,4 @@
-name: Windows venv-holder live E2E
+name: Windows marker fixture diagnostic
 
 # ON-DEMAND ONLY (fleet-update #91277, venv-holder consolidation work).
 #
@@ -41,9 +41,12 @@ concurrency:
 
 jobs:
   venv-holder-e2e:
-    name: venv-holder live E2E (windows-latest)
-    runs-on: windows-latest-32-core
+    name: marker fixtures (native Windows x64)
+    runs-on: windows-latest
     timeout-minutes: 25
+    env:
+      HERMES_TEST_WORKERS: 1
+      HERMES_TEST_FILE_RETRIES: 0
     steps:
       - name: Checkout code
         uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a # v7.0.1
@@ -55,11 +58,11 @@ jobs:
       - name: Set up locked Python and test dependencies
         uses: ./.github/actions/setup-pm
         with:
-          extras: '["messaging"]'
+          extras: '["all"]'
           test-environment: 'true'
           prune-python-cache: true
 
-      - name: Run venv-holder live E2E
+      - name: Run marker and supervision fixtures
         # Canonical runner (scripts/run_tests.sh) — never bare pytest: it
         # enforces credential hygiene, TZ, temp HERMES_HOME and subprocess
         # isolation. The live files are host-marked windows-only, so the
@@ -68,42 +71,9 @@ jobs:
         run: |
           set -uo pipefail
           bash scripts/run_tests.sh \
-            tests/hermes_cli/test_venv_holder_windows_live.py \
-            tests/hermes_cli/test_taskkill_identity_windows_live.py \
-            tests/hermes_cli/test_git_trampoline_windows_live.py \
-            tests/pm/test_held_entry_windows_live.py
-
-      - name: Run Telegram CLOSE-WAIT reconnect live E2E (#87057)
-        shell: bash
-        run: |
-          set -uo pipefail
-          bash scripts/run_tests.sh tests/gateway/test_telegram_closewait_windows_live.py
-
-      - name: Run background-executor spawn parity live E2E (#70716)
-        shell: bash
-        run: |
-          set -uo pipefail
-          bash scripts/run_tests.sh tests/tools/test_process_registry_windows_live.py
-
-      - name: Turn Windows long paths off for later steps (#130242)
-        # The runner image turns LongPathsEnabled on; 0 is the Windows default
-        # most users have. A process reads the value when it starts, so only
-        # later steps see it. Keep this step after every lane that expects the
-        # image's setting. It does not depend on those lanes passing.
-        id: long_paths_off
-        if: ${{ !cancelled() }}
-        shell: pwsh
-        run: |
-          reg add 'HKLM\SYSTEM\CurrentControlSet\Control\FileSystem' /v LongPathsEnabled /t REG_DWORD /d 0 /f
-          if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          (Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem').LongPathsEnabled
-
-      - name: Run PM long-path live E2E with long paths off (#130242)
-        # The test first asserts RtlAreLongPathsEnabled() is false in its own
-        # process, so this step cannot pass if the step above did not take.
-        # ``-m`` replaces pyproject's addopts, which deselect ``integration``.
-        if: ${{ !cancelled() && steps.long_paths_off.outcome == 'success' }}
-        shell: bash
-        run: |
-          set -uo pipefail
-          bash scripts/run_tests.sh tests/pm/test_long_paths_windows_live.py -- -m "platforms and integration" -v
+            tests/scripts/desktop_update/test_desktop_update_windows_marker.py \
+            tests/scripts/desktop_update/test_desktop_update_windows_marker_lock.py \
+            tests/scripts/desktop_update/test_desktop_update_windows_marker_ops.py \
+            tests/scripts/desktop_update/test_desktop_update_windows_handoff_lineage.py \
+            tests/scripts/desktop_update/test_desktop_update_windows_commit_outcome.py \
+            tests/scripts/desktop_update/test_desktop_update_windows_supervision.py

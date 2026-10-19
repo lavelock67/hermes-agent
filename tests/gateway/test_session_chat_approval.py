@@ -2,7 +2,8 @@
 import asyncio
 from unittest.mock import patch
 
-from gateway.platforms.api_server import APIServerAdapter, _SessionEventQueue
+from gateway.platforms.api_server import APIServerAdapter
+from gateway.platforms.api_server_session_events import _SessionEventQueue
 
 
 def test_session_stream_approval_keyed_by_run_id_and_enqueued():

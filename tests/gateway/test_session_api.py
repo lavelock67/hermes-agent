@@ -1333,11 +1333,38 @@ async def test_session_stream_records_reply_text_for_post_disconnect_recovery(
 
 
 @pytest.mark.asyncio
-async def test_interim_commentary_reaches_session_sse_and_responses_stream(adapter, session_db, monkeypatch):
+@pytest.mark.parametrize("worker_already_finished", [False, True])
+async def test_interim_commentary_reaches_session_sse_and_responses_stream(
+    adapter, session_db, monkeypatch, worker_already_finished
+):
     """Codex commentary / mid-turn assistant text is a typed ``assistant.commentary`` event on the
     session SSE endpoint and a ``phase: commentary`` message item on /v1/responses, never part of
     the final answer; ``display.interim_assistant_messages: false`` installs no callback (#67580)."""
     import json as _json
+
+    if worker_already_finished:
+        # A fast executor may finish before the handler awaits its future. Keep
+        # its callback pending on the loop while returning an already-done future.
+        def completed_worker(loop, fn):
+            future = loop.create_future()
+            outcome = []
+
+            def run():
+                try:
+                    outcome.append((True, fn()))
+                except BaseException as exc:
+                    outcome.append((False, exc))
+
+            worker = threading.Thread(target=run)
+            worker.start()
+            worker.join(timeout=5)
+            assert not worker.is_alive(), "fixture worker did not finish"
+            succeeded, value = outcome[0]
+            (future.set_result if succeeded else future.set_exception)(value)
+            return future
+
+        monkeypatch.setattr(
+            "gateway.platforms.api_server_runs._submit_api_worker", completed_worker)
 
     session_id = session_db.create_session("commentary-session", "api_server")
 
@@ -1374,8 +1401,11 @@ async def test_interim_commentary_reaches_session_sse_and_responses_stream(adapt
 
     sse_events = _events(sse)
     commentary = [d for n, d in sse_events if n == "assistant.commentary"]
-    assert [(d["text"], d["already_streamed"]) for d in commentary] == [("Checking the docs first.", False)]
+    assert [(d["text"], d["already_streamed"]) for d in commentary] == [("Checking the docs first.", False)], sse
     assert next(d for n, d in sse_events if n == "assistant.completed")["content"] == "Done."
+    names = [name for name, _ in sse_events]
+    assert names.index("assistant.commentary") < names.index("assistant.completed")
+    assert [event["seq"] for _, event in sse_events] == list(range(1, len(sse_events) + 1))
 
     done_items = [d["item"] for n, d in _events(responses) if n == "response.output_item.done"]
     assert [(i.get("phase"), i["content"][0]["text"]) for i in done_items if i["type"] == "message"] == [

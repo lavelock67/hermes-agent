@@ -167,6 +167,10 @@ jobs:
 
           echo "selected file(s) for ${{ matrix.marker }}:"
           cat "$LIST"
+          if [ "${{ matrix.marker }}" = "windows" ]; then
+            git --version
+            git --exec-path
+          fi
 
           # Desktop-update hand-off integration tests spawn the real
           # windows.ps1; deselect them unless the PR touched that surface
@@ -197,7 +201,8 @@ jobs:
         env:
           # These files spawn nested PowerShell trees. CPU-count parallelism
           # starves cold child startup before the fixture's idle deadline.
-          HERMES_TEST_WORKERS: ${{ matrix.marker == 'windows' && (github.repository_owner == 'NousResearch' && '16' || '4') || '' }}
+          HERMES_TEST_WORKERS: ${{ matrix.marker == 'windows' && (github.repository_owner == 'NousResearch' && '16' || '1') || '' }}
+          HERMES_TEST_FILE_RETRIES: ${{ github.repository_owner != 'NousResearch' && '0' || '' }}
           HERMES_TEST_SLICE: ${{ matrix.slice || '' }}
           # Belt-and-suspenders with tests/conftest.py's env blanking: no
           # test may reach a real provider API.

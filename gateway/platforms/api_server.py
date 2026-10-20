@@ -140,6 +140,7 @@ from gateway.platforms import api_server_room_grants as _room_grants
 from gateway.platforms import api_server_runs as _api_runs
 from gateway.platforms.api_server_openai_routes import OpenAICompatRoutesMixin
 from gateway.platforms.api_server_memory_sessions import ApiServerMemorySessions
+from gateway.platforms.api_server_session_events import _SessionEventQueue
 from gateway.platforms.base import (
     MEDIA_TAG_CLEANUP_RE, BasePlatformAdapter, SendResult, _terminal_sentinel_start, is_network_accessible,
     validate_media_delivery_path)
@@ -1116,38 +1117,6 @@ class _ProviderAuthResolutionError(RuntimeError):
         label = t("platform.api_server.provider_rate_limited" if self.is_rate_limited()
                   else "platform.api_server.provider_auth_failed")
         return t("platform.api_server.provider_error_line", label=label, error=self)
-
-
-class _SessionEventQueue:
-    """Ordered SSE event queue for one /api/sessions/{id}/chat/stream run. ``payload`` stamps
-    session_id/run_id/seq/ts; ``enqueue`` is executor-thread safe (hops onto the owning loop)."""
-
-    def __init__(self, session_id: str, run_id: str):
-        self.loop = asyncio.get_running_loop()
-        self.queue: asyncio.Queue[Optional[tuple[str, dict[str, Any]]]] = asyncio.Queue()
-        self.session_id = session_id
-        self.run_id = run_id
-        self.seq = 0
-
-    def payload(self, name: str, payload: dict[str, Any]) -> tuple[str, dict[str, Any]]:
-        self.seq += 1
-        payload.setdefault("session_id", self.session_id)
-        payload.setdefault("run_id", self.run_id)
-        payload.setdefault("seq", self.seq)
-        payload.setdefault("ts", time.time())
-        return name, payload
-
-    def enqueue(self, name: str, payload: dict[str, Any]) -> None:
-        event = self.payload(name, payload)
-        try:
-            running_loop = asyncio.get_running_loop()
-        except RuntimeError:
-            running_loop = None
-        with suppress(RuntimeError):
-            if running_loop is self.loop:
-                self.queue.put_nowait(event)
-            else:
-                self.loop.call_soon_threadsafe(self.queue.put_nowait, event)
 
 
 def _room_grant_delegate(name: str):
@@ -3672,11 +3641,16 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
                 self._set_run_status(run_id, "running", last_event="run.started")
                 await queue.put(_event_payload("message.started", {"message": {"id": message_id, "role": "assistant"}}))
                 history = await self._conversation_history_for_session(session_id)
-                result, usage = await self._run_agent(
-                    conversation_history=history, stream_delta_callback=_delta,
-                    tool_progress_callback=_tool_progress, interim_assistant_callback=_commentary,
-                    active_run_id=run_id, approval_notify_callback=approval_notify,
-                    approval_session_key=run_id, **ctx["run_kwargs"])
+                try:
+                    result, usage = await self._run_agent(
+                        conversation_history=history, stream_delta_callback=_delta,
+                        tool_progress_callback=_tool_progress, interim_assistant_callback=_commentary,
+                        active_run_id=run_id, approval_notify_callback=approval_notify,
+                        approval_session_key=run_id, **ctx["run_kwargs"])
+                finally:
+                    # A finished worker may not suspend its awaiter. Drain its
+                    # scheduled events before any terminal frame or sentinel.
+                    await events.flush()
                 is_dict = isinstance(result, dict)
                 final_response = _resolve_media_to_data_urls(result.get("final_response", "") if is_dict else "")
                 effective_session_id = result.get("session_id", session_id) if is_dict else session_id

@@ -417,12 +417,19 @@ async def _check_error_cancel_before_entry(monkeypatch, adapter, app, delivered)
         await app.process_update(update(app.bot))
         await app.stop()
     assert len(scheduled) == 1 and not effects
+    task, callback = scheduled[0]
+    assert task.cancelled()
+    # PTB drains its tasks, but their done callbacks can still be queued when
+    # stop returns. Wait behind Hermes' claim-release callback before checking it.
+    callbacks_done = asyncio.Event()
+    task.add_done_callback(lambda _: callbacks_done.set())
+    await asyncio.wait_for(callbacks_done.wait(), timeout=2)
     assert not adapter._inflight_update_ids and not adapter._seen_update_ids
     # The cancelled PTB task never awaited the callback coroutine: it must be closed too.
     try:
-        assert scheduled[0][1].cr_frame is None
+        assert callback.cr_frame is None
     finally:
-        scheduled[0][1].close()
+        callback.close()
     app.remove_error_handler(notify)
     await app.start()
     await app.process_update(update(app.bot))

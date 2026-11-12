@@ -4,11 +4,15 @@ import json
 import os
 import sqlite3
 from pathlib import Path
+from types import SimpleNamespace
+
+import pytest
 
 from gateway.readiness import collect_runtime_readiness
 
 
-def test_collect_runtime_readiness_reports_healthy_local_runtime(tmp_path, monkeypatch):
+@pytest.mark.parametrize(("used", "expected"), [(20, "ok"), (90, "degraded")])
+def test_collect_runtime_readiness_includes_disk_health(tmp_path, monkeypatch, used, expected):
     home = tmp_path / ".hermes"
     home.mkdir()
     (home / "config.yaml").write_text(
@@ -18,6 +22,10 @@ def test_collect_runtime_readiness_reports_healthy_local_runtime(tmp_path, monke
     with sqlite3.connect(home / "state.db") as conn:
         conn.execute("CREATE TABLE probe (id INTEGER PRIMARY KEY)")
     monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setattr(
+        "gateway.readiness.shutil.disk_usage",
+        lambda _path: SimpleNamespace(total=100, used=used, free=100 - used),
+    )
 
     result = collect_runtime_readiness(
         configured_model="test/model",
@@ -29,14 +37,14 @@ def test_collect_runtime_readiness_reports_healthy_local_runtime(tmp_path, monke
         active_api_runs=2,
     )
 
-    assert result["status"] == "ok"
+    assert result["status"] == expected
     assert result["checks"]["state_db"]["status"] == "ok"
     assert result["checks"]["session_store"]["status"] == "ok"
     assert result["checks"]["config"]["status"] == "ok"
     assert result["checks"]["model"]["status"] == "ok"
     assert result["checks"]["gateway"]["status"] == "ok"
     assert result["checks"]["background_queues"]["active_api_runs"] == 2
-    assert result["checks"]["disk"]["status"] in {"ok", "degraded"}
+    assert result["checks"]["disk"]["status"] == expected
 
 
 def test_collect_runtime_readiness_degrades_on_invalid_config_and_stopped_gateway(

@@ -242,23 +242,23 @@ edge-tts = ["edge-tts==7.2.7"]
 # setup requests report unavailable rather than succeeding with an empty set.
 neutts = ["neutts[all]==1.4.1; python_version < '3.14'"]
 kittentts = [
-  "kittentts @ https://github.com/KittenML/KittenTTS/releases/download/0.8.1/kittentts-0.8.1-py3-none-any.whl ; (platform_machine != 'ARM64' or sys_platform != 'win32') and (platform_machine != 'x86_64' or sys_platform != 'darwin')",
+  "kittentts @ https://github.com/KittenML/KittenTTS/releases/download/0.8.1/kittentts-0.8.1-py3-none-any.whl ; (platform_machine != 'ARM64' or sys_platform != 'win32') and (platform_machine != 'x86_64' or sys_platform != 'darwin') and sys_platform != 'android'",
   # KittenTTS requires misaki[en]>=0.9.4, and PyPI's misaki 0.9.4 caps Python
   # below 3.13. The NousResearch fork is the same 0.9.4 code with the cap
   # raised to <3.15. Declaring it here makes KittenTTS's transitive
   # requirement resolve to the fork. Drop this line when upstream misaki
   # publishes a release that allows 3.14.
-  "misaki[en] @ git+https://github.com/NousResearch/misaki.git@f03fd2be7346952a83d3d4845c217fc7667f322d ; (platform_machine != 'ARM64' or sys_platform != 'win32') and (platform_machine != 'x86_64' or sys_platform != 'darwin')",
-  "soundfile==0.14.0; (platform_machine != 'ARM64' or sys_platform != 'win32') and (platform_machine != 'x86_64' or sys_platform != 'darwin')",
+  "misaki[en] @ git+https://github.com/NousResearch/misaki.git@f03fd2be7346952a83d3d4845c217fc7667f322d ; (platform_machine != 'ARM64' or sys_platform != 'win32') and (platform_machine != 'x86_64' or sys_platform != 'darwin') and sys_platform != 'android'",
+  "soundfile==0.14.0; (platform_machine != 'ARM64' or sys_platform != 'win32') and (platform_machine != 'x86_64' or sys_platform != 'darwin') and sys_platform != 'android'",
 ]
 # onnxruntime has no Intel macOS wheel. Piper has no Windows ARM64 wheel.
 piper = [
-  "piper-tts==1.8.0; (platform_machine != 'ARM64' or sys_platform != 'win32') and (platform_machine != 'x86_64' or sys_platform != 'darwin')",
+  "piper-tts==1.8.0; (platform_machine != 'ARM64' or sys_platform != 'win32') and (platform_machine != 'x86_64' or sys_platform != 'darwin') and sys_platform != 'android'",
 ]
 modal = ["modal==1.5.5"]
 daytona = ["daytona==0.155.0"]
 vercel = ["vercel==0.7.2"]
-google-meet = ["playwright==1.62.0", "websockets==15.0.1"]
+google-meet = ["playwright==1.62.0; sys_platform != 'android'", "websockets==15.0.1; sys_platform != 'android'"]
 messaging = [
   "python-telegram-bot[webhooks]==22.8",
   "discord.py[voice]==2.7.1",
@@ -298,7 +298,7 @@ voice = [
   # targets: ctranslate2 has no win_arm64 wheel/sdist (win32-arm64), and
   # onnxruntime has no darwin-x64 wheel/sdist (darwin-x64). Gate the local
   # STT path off both; sounddevice/numpy still ship.
-  "faster-whisper==1.2.1; (platform_machine != 'ARM64' or sys_platform != 'win32') and (platform_machine != 'x86_64' or platform_system != 'Darwin')",
+  "faster-whisper==1.2.1; (platform_machine != 'ARM64' or sys_platform != 'win32') and (platform_machine != 'x86_64' or platform_system != 'Darwin') and sys_platform != 'android'",
   "sounddevice==0.5.5",
   "numpy==2.4.3",
 ]
@@ -331,7 +331,7 @@ telegram = ["python-telegram-bot[webhooks]==22.8"]
 discord = ["discord.py[voice]==2.7.1"]
 # stt-whisper + audio-io compose [voice] (faster-whisper / sounddevice / numpy).
 stt-whisper = [
-  "faster-whisper==1.2.1; (platform_machine != 'ARM64' or sys_platform != 'win32') and (platform_machine != 'x86_64' or platform_system != 'Darwin')",
+  "faster-whisper==1.2.1; (platform_machine != 'ARM64' or sys_platform != 'win32') and (platform_machine != 'x86_64' or platform_system != 'Darwin') and sys_platform != 'android'",
 ]
 audio-io = ["sounddevice==0.5.5", "numpy==2.4.3"]
 # WeChat voice decode (tools/transcription_tools.py self-heal path).
@@ -426,8 +426,8 @@ mistral = ["mistralai==2.10.1"]
 # PM on first use; never a core dependency and deliberately
 # NOT in [all].
 otlp = [
-  "opentelemetry-sdk==1.45.1",
-  "opentelemetry-exporter-otlp-proto-http==1.45.1",
+  "opentelemetry-sdk==1.45.2",
+  "opentelemetry-exporter-otlp-proto-http==1.45.2",
 ]
 bedrock = ["boto3==1.42.89"]
 vertex = ["google-auth==2.55.1"]
@@ -573,6 +573,8 @@ opt-in-extras = ["kittentts"]
 # single-authority for WHICH extra is supported WHERE.
 
 [tool.hermes.extras-platforms]
+# Playwright does not publish an Android wheel.
+google-meet = "sys_platform != 'android'"
 # mautrix[encryption] → python-olm: linux-only wheels, no win/darwin build.
 matrix = "sys_platform == 'linux'"
 # grpcio (via google-cloud-pubsub) has no win_arm64 wheel.
@@ -584,13 +586,13 @@ wake-openwakeword = "(platform_machine != 'ARM64' or sys_platform != 'win32') an
 # extra, rebuild the whole dependency environment and still fail the anchor on every retry.
 # Gate the extra that carries only faster-whisper; [voice] also has ungated deps (sounddevice,
 # numpy) and stays installable, see test_declared_extra_gates_match_dependency_selection.
-stt-whisper = "(platform_machine != 'ARM64' or sys_platform != 'win32') and (platform_machine != 'x86_64' or platform_system != 'Darwin')"
+stt-whisper = "(platform_machine != 'ARM64' or sys_platform != 'win32') and (platform_machine != 'x86_64' or platform_system != 'Darwin') and sys_platform != 'android'"
 # NeuTTS excludes Python 3.14.
 neutts = "python_version < '3.14'"
 # KittenTTS: onnxruntime has no Intel macOS wheel; misaki[en]'s torch has no
 # Windows ARM64 wheel.
-kittentts = "(platform_machine != 'ARM64' or sys_platform != 'win32') and (platform_machine != 'x86_64' or sys_platform != 'darwin')"
-piper = "(platform_machine != 'ARM64' or sys_platform != 'win32') and (platform_machine != 'x86_64' or sys_platform != 'darwin')"
+kittentts = "(platform_machine != 'ARM64' or sys_platform != 'win32') and (platform_machine != 'x86_64' or sys_platform != 'darwin') and sys_platform != 'android'"
+piper = "(platform_machine != 'ARM64' or sys_platform != 'win32') and (platform_machine != 'x86_64' or sys_platform != 'darwin') and sys_platform != 'android'"
 
 [tool.uv]
 # uv otherwise enables the dev group by default, including in payload builds.
@@ -603,7 +605,7 @@ environments = ["python_version >= '3.14'"]
 constraint-dependencies = [
   "multidict>=6.9.1,<7",
   "oauthlib>=4.0.1,<5",
-  "opentelemetry-api>=1.45.1,<2",
+  "opentelemetry-api>=1.45.2,<2",
   "msgpack>=1.2.3,<2",
   "virtualenv>=21.14.9,<22",
 ]

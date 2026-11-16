@@ -49,31 +49,31 @@
     "chromium": {
       "artifacts": {
         "darwin-arm64": {
-          "sha256": "3dbf04e28a02079148e9c7417840a0c1d3903361eceeee7e7eb59ef77021bdb2",
-          "url": "https://cdn.playwright.dev/builds/cft/145.0.7632.6/mac-arm64/chrome-mac-arm64.zip"
+          "sha256": "bf3b49d0fe62a62397e98641aa736ef813c46014f03ec13d4913442e6966c7fc",
+          "url": "https://storage.googleapis.com/chrome-for-testing-public/157.0.8103.78/mac-arm64/chrome-mac-arm64.zip"
         },
         "darwin-x64": {
-          "sha256": "0de8f876af53a93f8832e54490ff7de41a9b6648211590280cb50289ed45f240",
-          "url": "https://cdn.playwright.dev/builds/cft/145.0.7632.6/mac-x64/chrome-mac-x64.zip"
+          "sha256": "8f9590a4e011ba4ea135f50c711f8bf2c7f32b1fac20de68d1b85f010f095ab3",
+          "url": "https://storage.googleapis.com/chrome-for-testing-public/157.0.8103.78/mac-x64/chrome-mac-x64.zip"
         },
         "linux-arm64": {
-          "sha256": "70b4620521b1ada360475e1059dfe9d549a6461a79b9342f85b7d47e44123077",
-          "url": "https://cdn.playwright.dev/dbazure/download/playwright/builds/chromium/1208/chromium-linux-arm64.zip"
+          "sha256": "f354d666822a11d8fe99e923c44be77dd226fab2750c5b5947e6318818bf10f1",
+          "url": "https://storage.googleapis.com/chrome-for-testing-public/157.0.8103.78/linux-arm64/chrome-linux-arm64.zip"
         },
         "linux-x64": {
-          "sha256": "b5e3195041af345a668d110f5daf5581961fa3608626ea588c97dd0fe81c4e38",
-          "url": "https://cdn.playwright.dev/builds/cft/145.0.7632.6/linux64/chrome-linux64.zip"
+          "sha256": "9223832977a13db3646201b1341c1f9cf08afa3ceae92540116d7b0c062364fb",
+          "url": "https://storage.googleapis.com/chrome-for-testing-public/157.0.8103.78/linux64/chrome-linux64.zip"
         },
         "win32-arm64": {
-          "sha256": "08476e6fe550ccbc0d11d1ab030292fc4e32d4987400c77b2d1905a6bd13b4f6",
-          "url": "https://cdn.playwright.dev/builds/cft/145.0.7632.6/win64/chrome-win64.zip"
+          "sha256": "5f6ec40206407112702e163bf694d07f9fdc8ccbd346c70ce61fa62f716493f9",
+          "url": "https://storage.googleapis.com/chrome-for-testing-public/157.0.8103.78/win64/chrome-win64.zip"
         },
         "win32-x64": {
-          "sha256": "08476e6fe550ccbc0d11d1ab030292fc4e32d4987400c77b2d1905a6bd13b4f6",
-          "url": "https://cdn.playwright.dev/builds/cft/145.0.7632.6/win64/chrome-win64.zip"
+          "sha256": "5f6ec40206407112702e163bf694d07f9fdc8ccbd346c70ce61fa62f716493f9",
+          "url": "https://storage.googleapis.com/chrome-for-testing-public/157.0.8103.78/win64/chrome-win64.zip"
         }
       },
-      "version": "1208+145.0.7632.6"
+      "version": "1234+157.0.8103.78"
     },
     "cua-driver": {
       "artifacts": {
@@ -521,43 +521,43 @@
     "python": {
       "artifacts": {
         "darwin-arm64": {
-          "sha256": "30a18bcb9ab75e485b4bf4e5d783dde165571e7e42c56dff47a2d2c5345183a4",
-          "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261026/cpython-3.14.10+20261026-aarch64-apple-darwin-install_only.tar.gz"
+          "sha256": "42031ed5f0d38777335252c8c77d64708c8010dd67c128246bdec25000672666",
+          "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261110/cpython-3.14.10+20261110-aarch64-apple-darwin-install_only.tar.gz"
         },
         "darwin-x64": {
-          "sha256": "01cedae5d4a66ac570e13cb35fa570d0e79ba8e9affd4518a5d85b6c2b98ff10",
-          "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261026/cpython-3.14.10+20261026-x86_64-apple-darwin-install_only.tar.gz"
+          "sha256": "f6c82fcf867b4aaadd373ac97699ad95fbb9c96f9ecf9b25775943aa5458b87f",
+          "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261110/cpython-3.14.10+20261110-x86_64-apple-darwin-install_only.tar.gz"
         },
         "linux-arm64": {
-          "sha256": "dcc31ce7b9ddbbffac160da7fff0cc069054f43eca52382a7d0eebf94e985b88",
-          "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261026/cpython-3.14.10+20261026-aarch64-unknown-linux-gnu-install_only.tar.gz"
+          "sha256": "e59f83159984a55e719bb3805a0b2b5b281f645769222218084b78b92eedc07f",
+          "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261110/cpython-3.14.10+20261110-aarch64-unknown-linux-gnu-install_only.tar.gz"
         },
         "linux-arm64-bionic": {
           "sha256": "3166e56c2b6c03fff41191fbb9d736302978e7c484702814d9f6dc99dd6006bd",
           "url": "https://packages.termux.dev/apt/termux-main/pool/main/p/python/python_3.14.6-1_aarch64.deb"
         },
         "linux-arm64-musl": {
-          "sha256": "2220e769dfae157c16cd387705bf6b9a934955d93e0b818112c2f296cc3ae50f",
-          "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261026/cpython-3.14.10+20261026-aarch64-unknown-linux-musl-install_only.tar.gz"
+          "sha256": "04059957a8a5d4fb858f26191cc6d193428de6f914ebfbe0591aee0bd29ff13f",
+          "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261110/cpython-3.14.10+20261110-aarch64-unknown-linux-musl-install_only.tar.gz"
         },
         "linux-x64": {
-          "sha256": "1b38024924eb7f4cf0cab45d7b871d1f1991354190fccd2625ac7529a43786e2",
-          "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261026/cpython-3.14.10+20261026-x86_64-unknown-linux-gnu-install_only.tar.gz"
+          "sha256": "3fe0d7c0538eb5d190c34582992d26230532551355cbd789fabc6591621cfc07",
+          "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261110/cpython-3.14.10+20261110-x86_64-unknown-linux-gnu-install_only.tar.gz"
         },
         "linux-x64-musl": {
-          "sha256": "4c03a4d9d582ce3610f622c2d69c9a83cbfbdd6fc1d75689820f8f54aa73f0dc",
-          "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261026/cpython-3.14.10+20261026-x86_64-unknown-linux-musl-install_only.tar.gz"
+          "sha256": "f62b3abda3feae720ace6a9180ef4ea761a62e60917247d6b622cf69caab239d",
+          "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261110/cpython-3.14.10+20261110-x86_64-unknown-linux-musl-install_only.tar.gz"
         },
         "win32-arm64": {
-          "sha256": "42c9ff7f8b00480c43f6e5bfceacb43533ebfddac2c6fc16f4de5946fb4af992",
-          "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261026/cpython-3.14.10+20261026-aarch64-pc-windows-msvc-install_only.tar.gz"
+          "sha256": "d1a855c3debb8c66e2ad684373f807d35ce9a2b5abf9241a846a8054d8ff2bdf",
+          "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261110/cpython-3.14.10+20261110-aarch64-pc-windows-msvc-install_only.tar.gz"
         },
         "win32-x64": {
-          "sha256": "98bbe6a0d798bcbad142e96e5930a330e4dc407638e898b515c51eb73a27580d",
-          "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261026/cpython-3.14.10+20261026-x86_64-pc-windows-msvc-install_only.tar.gz"
+          "sha256": "b9bee0a6f590914a495a8305701951e543b4475bb620d11661b49052b990456b",
+          "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261110/cpython-3.14.10+20261110-x86_64-pc-windows-msvc-install_only.tar.gz"
         }
       },
-      "version": "3.14.10+20261026"
+      "version": "3.14.10+20261110"
     },
     "ripgrep": {
       "artifacts": {

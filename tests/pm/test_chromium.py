@@ -3,7 +3,8 @@ from pathlib import Path
 
 import pytest
 
-from pm.lock import Facts
+from pm.lock import Facts, Lockfile
+from pm.paths import lockfile_path
 from pm.packages import Chromium
 from pm.registry import walk
 from scripts.bundles.native import _bundle_package_names
@@ -18,7 +19,7 @@ def test_browser_closure_and_bundle_ship_full_chromium_only():
 
 @pytest.mark.parametrize(("target", "relative"), [
     ("linux-x64", "chrome-linux64/chrome"),
-    ("linux-arm64", "chrome-linux/chrome"),
+    ("linux-arm64", "chrome-linux-arm64/chrome"),
     ("darwin-arm64", "chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing"),
     ("win32-x64", "chrome-win64/chrome.exe"),
     ("win32-arm64", "chrome-win64/chrome.exe"),
@@ -39,3 +40,13 @@ def test_chromium_binary_and_env_survive_store_relocation(tmp_path, target, rela
     env = Facts(moved / "facts.json").env_for("chromium", moved)
     assert Path(env["AGENT_BROWSER_EXECUTABLE_PATH"]) == moved / entry.name / relative
     assert env["PLAYWRIGHT_BROWSERS_PATH"] == str(moved)
+
+
+def test_linux_arm64_chromium_uses_the_versioned_vendor_archive():
+    package = Chromium()
+    lock = Lockfile(lockfile_path())
+    version = lock.version(package.name)
+    _, _, chrome_version = version.partition("+")
+    archive, = lock.artifacts(package.name, "linux-arm64")
+    assert archive["url"] == package.fetch_url(version, "linux-arm64")
+    assert archive["url"].endswith(f"/{chrome_version}/linux-arm64/chrome-linux-arm64.zip")
